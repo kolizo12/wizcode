@@ -1,26 +1,50 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
-version: 2.1
-
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-    docker:
-      - image: cimg/base:stable
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+  wizcli_scan:
+    machine: true
+    working_directory: ~/app
+    
+      # This script is configured to work on test
     steps:
+      # Running the built-in checkout script to checkout the code in this repo
       - checkout
+      # Step to pull Dockerfile from git and build it for image scan
+      # the dot at the end of parameters.image . says to look for Dockerfile in this directory
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Build Image
+          command: docker build -t nginx:latest .
+      # Step to download WizCLI from the inter-webs
+      - run:
+          
+          name: Download wizcli
+          command: |
+            sudo mkdir -p /wizcli
+            sudo curl -o /wizcli/wizcli https://wizcli.app.wiz.io/wizcli
+            sudo chmod +x /wizcli/wizcli
+      - run:
+          name: Scan Docker image
+          command: |
+            set +eo pipefail
+            # Time to authenticate!
+            printf "Authenticating to wizcli"
+            # ${WIZCLI_ID} and ${WIZCLI_SECRET} are variables you declared in step 2c
+            WIZ_ENV=test /wizcli/wizcli auth --id ${WIZCLI_ID} --secret ${WIZCLI_SECRET}
+            WIZ_ENV=test /wizcli/wizcli docker scan --image nginx:latest
+            exitCode=$?
+      - run:
+          name: Scan IaC Template
+          command: |
+            set +eo pipefail
+            # Skipping auth since it occured in previous step
+            printf "Scanning Infrastructure as Code Template"
+            # ${WIZCLI_ID} and ${WIZCLI_SECRET} are variables you declared in step 2c
+            # WIZ_ENV=test /wizcli/wizcli auth --id ${WIZCLI_ID} --secret ${WIZCLI_SECRET}
+            WIZ_ENV=test /wizcli/wizcli iac scan --path CreateEC2.yml
+            exitCode=$?
+     
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+# In your workflow, make sure to trigger the wizcli_scan job you just declared above (it can trigger after a docker_build job):
 workflows:
-  say-hello-workflow:
+  version: 2
+  build_workflow:
     jobs:
-      - say-hello
+      - wizcli_scan
