@@ -38,7 +38,7 @@ jobs:
             printf "Scanning Infrastructure as Code Template"
             # ${WIZCLI_ID} and ${WIZCLI_SECRET} are variables you declared in step 2c
             # WIZ_ENV=test /wizcli/wizcli auth --id ${WIZCLI_ID} --secret ${WIZCLI_SECRET}
-            WIZ_ENV=test /wizcli/wizcli iac scan --path CreateEC2.yml
+            WIZ_ENV=test /wizcli/wizcli iac scan --path CreateEC2.ym
             exitCode=$?
      
 
