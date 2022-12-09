@@ -6,8 +6,6 @@ name: Docker
 # documentation.
 
 on:
-  schedule:
-    - cron: '33 22 * * *'
   push:
     branches: [ "main" ]
     # Publish semver tags as releases.
@@ -18,7 +16,7 @@ on:
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: docker.io
-   github.repository as kolizo12/wizcode
+   github.repository as kolizo/webbing
   IMAGE_NAME: ${{ github.repository }}
 
 
