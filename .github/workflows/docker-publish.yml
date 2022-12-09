@@ -9,3 +9,5 @@ jobs:
         uses: aevea/action-kaniko@master
         with:
           image: kolizo/webbing
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
